@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Veluxa – AI web tester</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#ecf1ef; --surface:#fbfdfc; --ink:#10231f; --muted:#506660; --line:#c9d6d1;
+  --accent:#2447e8; --accent-ink:#fff; --pass:#17794f; --fail:#b8322a; --warn-bg:#fdecea;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"Instrument Sans","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0e1816; --surface:#142421; --ink:#e6f0ed; --muted:#9bb2ab; --line:#27403b;
+    --accent:#6f8bff; --accent-ink:#0b1220; --pass:#4fcf97; --fail:#ff8a80; --warn-bg:#3a1f1d;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 var(--body);min-height:100vh}
+h1,h2,h3{font-family:var(--display);line-height:1.15;margin:0}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px;display:grid;grid-template-columns:340px 1fr;gap:48px;align-items:start}
+@media (max-width:860px){.wrap{grid-template-columns:1fr;gap:32px;padding:24px 16px 64px}}
+aside{position:sticky;top:24px}
+@media (max-width:860px){aside{position:static}}
+h1{font-size:44px;font-weight:700;letter-spacing:-.02em}
+.lede{color:var(--muted);margin:12px 0 28px;max-width:34ch}
+label{display:block;font-weight:600;font-size:14px;margin:0 0 6px}
+.hint{font-weight:400;color:var(--muted)}
+input[type=text],input[type=password]{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+input:focus-visible,button:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.field{margin-bottom:18px}
+details{margin:6px 0 22px;border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font-weight:600;font-size:14px}
+details .field{margin-top:14px}
+button.go{font:600 16px var(--body);width:100%;background:var(--accent);color:var(--accent-ink);border:0;border-radius:6px;padding:13px 16px;cursor:pointer}
+button.go:disabled{opacity:.6;cursor:progress}
+.note{font-size:13px;color:var(--muted);margin-top:16px}
+#err{background:var(--warn-bg);border-left:4px solid var(--fail);padding:12px 14px;border-radius:4px;margin-bottom:20px}
+#err[hidden],#progress[hidden],#result[hidden]{display:none}
+#progress{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:16px 18px}
+#progress h2{font-size:20px;margin-bottom:10px}
+#log{list-style:none;margin:0;padding:0;color:var(--muted);font-size:14px}
+#log li:last-child{color:var(--ink);font-weight:500}
+#log li:last-child::after{content:" …"}
+.verdict{font-family:var(--display);font-size:32px;font-weight:700;letter-spacing:-.01em}
+.verdict .bad{color:var(--fail)} .verdict .good{color:var(--pass)}
+.meta{color:var(--muted);margin:6px 0 24px;display:flex;gap:18px;flex-wrap:wrap;font-size:14px}
+.meta a{color:var(--accent)}
+.login{margin:0 0 24px;padding:10px 14px;border-left:4px solid var(--line);font-size:14px;background:var(--surface)}
+.login.ok{border-color:var(--pass)} .login.no{border-color:var(--fail)}
+.page{display:grid;grid-template-columns:200px 1fr;gap:20px;padding:22px 0;border-top:1px solid var(--line)}
+@media (max-width:560px){.page{grid-template-columns:1fr}}
+.page .shot{display:block;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface);aspect-ratio:16/10}
+.page .shot img{width:100%;height:100%;object-fit:cover;object-position:top;display:block}
+.page .noshot{display:grid;place-items:center;height:100%;color:var(--muted);font-size:13px}
+.page h3{font-size:19px;font-weight:600;overflow-wrap:anywhere}
+.page .url{color:var(--muted);font-size:13px;overflow-wrap:anywhere;margin:2px 0 10px}
+.badge{display:inline-block;font-size:13px;font-weight:600;border-radius:99px;padding:2px 10px;margin-left:8px;vertical-align:middle}
+.badge.p{background:color-mix(in srgb,var(--pass) 18%,transparent);color:var(--pass)}
+.badge.f{background:color-mix(in srgb,var(--fail) 18%,transparent);color:var(--fail)}
+.checks{list-style:none;margin:0;padding:0;font-size:14px}
+.checks li{display:grid;grid-template-columns:20px 1fr;gap:6px;padding:3px 0}
+.checks .t{font-weight:700}.checks .t.p{color:var(--pass)}.checks .t.f{color:var(--fail)}
+.checks .d{color:var(--muted);overflow-wrap:anywhere}
+.ideas{border-top:1px solid var(--line);padding-top:22px;margin-top:6px}
+.ideas h2{font-size:22px;margin-bottom:4px}
+.ideas p{color:var(--muted);font-size:14px;margin:0 0 12px}
+.ideas ul{margin:0;padding-left:20px}.ideas li{margin:6px 0;max-width:75ch}
+.empty{color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:28px;max-width:52ch}
+@media (prefers-reduced-motion:no-preference){#progress{animation:in .25s ease-out}@keyframes in{from{opacity:0}to{opacity:1}}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <aside>
+    <h1>Veluxa</h1>
+    <p class="lede">Check that a website you own loads, has titles, shows controls and runs without console errors.</p>
+    <form id="f" autocomplete="off">
+      <div class="field">
+        <label for="url">Website address</label>
+        <input id="url" type="text" inputmode="url" placeholder="https://your-site.com" required>
+      </div>
+      <details>
+        <summary>Add a test login (optional)</summary>
+        <div class="field"><label for="loginUrl">Login page <span class="hint">– leave empty to use the address above</span></label>
+          <input id="loginUrl" type="text" placeholder="https://your-site.com/login"></div>
+        <div class="field"><label for="user">Email or username</label><input id="user" type="text"></div>
+        <div class="field"><label for="pass">Password</label><input id="pass" type="password"></div>
+        <p class="note">Use a dedicated staging account. Sites with MFA, SSO or CAPTCHA aren't supported.</p>
+      </details>
+      <button id="go" class="go" type="submit">Start testing</button>
+      <p class="note">Only test sites you own or have permission to test. Veluxa visits up to 10 pages on the same site and never clicks buttons or submits forms.</p>
+    </form>
+  </aside>
+
+  <section aria-live="polite">
+    <div id="err" role="alert" hidden></div>
+    <div id="progress" hidden><h2>Testing in progress</h2><ul id="log"></ul></div>
+    <div id="result" hidden></div>
+    <p id="empty" class="empty">Results appear here. Enter an address and start a test to see a screenshot and pass/fail checks for each page.</p>
+  </section>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+function el(tag, props, ...kids){
+  const e = document.createElement(tag);
+  for (const [k,v] of Object.entries(props||{})) {
+    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v; else e.setAttribute(k, v);
+  }
+  for (const kid of kids) if (kid != null) e.append(kid);
+  return e;
+}
+const btn = $('#go');
+function setBusy(b){ btn.disabled = b; btn.textContent = b ? 'Testing…' : 'Start testing'; }
+function showErr(msg){ const e=$('#err'); e.textContent = msg; e.hidden = false; $('#progress').hidden = true; }
+
+$('#f').addEventListener('submit', async ev => {
+  ev.preventDefault();
+  $('#err').hidden = true; $('#result').hidden = true; $('#empty').hidden = true;
+  $('#log').replaceChildren(); $('#progress').hidden = false;
+  setBusy(true);
+  try {
+    const r = await fetch('/api/runs', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ url:$('#url').value, loginUrl:$('#loginUrl').value, username:$('#user').value, password:$('#pass').value })
+    });
+    const j = await r.json();
+    if (!r.ok) throw new Error(j.error || 'The request failed.');
+    poll(j.id);
+  } catch (x) { showErr(x.message); setBusy(false); }
+});
+
+function poll(id){
+  const timer = setInterval(async () => {
+    try {
+      const r = await fetch('/api/runs/' + id);
+      if (!r.ok) throw new Error('missing');
+      const s = await r.json();
+      $('#log').replaceChildren(...s.log.map(l => el('li', {text:l})));
+      if (s.status === 'done') { clearInterval(timer); $('#progress').hidden = true; render(s.report); setBusy(false); }
+      else if (s.status === 'failed') { clearInterval(timer); showErr(s.error || 'The test run failed.'); setBusy(false); }
+    } catch (x) {
+      clearInterval(timer); showErr('Lost contact with Veluxa. Check that the terminal running Maven is still open.'); setBusy(false);
+    }
+  }, 1200);
+}
+
+function render(rep){
+  const box = $('#result'); box.replaceChildren(); box.hidden = false;
+  const s = rep.summary, failed = s.pagesTested - s.pagesPassed;
+  const verdict = el('div', {class:'verdict'});
+  verdict.append(failed === 0
+    ? el('span', {class:'good', text:`All ${s.pagesTested} pages passed`})
+    : el('span', {class:'bad', text:`${failed} of ${s.pagesTested} pages need attention`}));
+  box.append(verdict);
+  box.append(el('div', {class:'meta'},
+    el('span', {text:`${s.checksPassed} of ${s.checksRun} checks passed`}),
+    el('a', {href:`/reports/${rep.runId}/report.json`, target:'_blank', rel:'noopener', text:'Open report.json'})));
+
+  if (rep.login) {
+    box.append(el('div', {class:'login ' + (rep.login.success ? 'ok':'no')},
+      el('strong', {text: rep.login.success ? 'Login worked. ' : 'Login did not work. '}), rep.login.detail));
+  }
+
+  for (const p of rep.pages) {
+    const ok = p.passed;
+    const shot = p.screenshot
+      ? el('a', {class:'shot', href:p.screenshot, target:'_blank', rel:'noopener'}, el('img', {src:p.screenshot, alt:`Screenshot of ${p.title || p.url}`, loading:'lazy'}))
+      : el('div', {class:'shot'}, el('div', {class:'noshot', text:'No screenshot'}));
+    const checks = el('ul', {class:'checks'}, ...p.checks.map(c =>
+      el('li', {}, el('span', {class:'t ' + (c.passed?'p':'f'), 'aria-label': c.passed?'Passed':'Failed', text:c.passed?'✓':'✕'}),
+        el('span', {}, el('strong', {text:c.name + ': '}), el('span', {class:'d', text:c.detail})))));
+    const head = el('h3', {}, p.title || 'Untitled page', el('span', {class:'badge ' + (ok?'p':'f'), text: ok?'Passed':'Failed'}));
+    box.append(el('article', {class:'page'}, shot, el('div', {}, head, el('div', {class:'url', text:p.url}), checks)));
+  }
+
+  const ti = rep.testIdeas;
+  if (ti && ti.ideas.length) {
+    box.append(el('div', {class:'ideas'},
+      el('h2', {text:'Suggested tests'}),
+      el('p', {text:`Source: ${ti.source}. These are ideas for a person to review, not confirmed bugs.${ti.note ? ' ' + ti.note : ''}`}),
+      el('ul', {}, ...ti.ideas.map(i => el('li', {text:i})))));
+  }
+  box.scrollIntoView({behavior:'smooth', block:'start'});
+}
+</script>
+</body>
+</html>
